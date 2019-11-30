@@ -5,19 +5,33 @@ Created on Nov 26, 2019
 '''
 
 class Transaction(object):
-    '''
-    classdocs
-    '''
 
-
-    def __init__(self, t_id, t_type, ts):
+    def __init__(self, t_id, ts):
         '''
         Constructor
         '''
         self.id = t_id
-        self.status = "created"
-        self.transaction_type = t_type
-        self.locks_holding = []
         self.current_instruction = ""
         self.timestamp = ts
+        self.status = "running"
+    
+
+class ReadWrite_Transaction(Transaction):
+    
+    def __init__(self, t_id, ts):
+        
+        super().__init__(t_id, ts)
+        self.transaction_type = "read_write"
+        self.locks_holding = []
+        self.cache = {}
+        
+        
+        
+class ReadOnly_Transaction(Transaction):
+    
+    def __init__(self, t_id, ts):
+        super().__init__(t_id, ts) 
+        self.transaction_type = "read_only"
+        self.snapshot = {}
+        # grab the snapshot in all the variable's values at that moment
         
