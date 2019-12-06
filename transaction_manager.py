@@ -261,8 +261,6 @@ class Transaction_Manager(object):
         txn = self.txns[txn_id]
         txn.current_instruction = instr
 
-        #         print(f'Transaction {txn_id}: {txn.status}')
-
         # Check if transaction has already been committed or aborted
         if txn.status == "committed" or txn.status == "aborted":
             print(f'Transaction {txn_id} has already been {txn.status}')
@@ -316,9 +314,6 @@ class Transaction_Manager(object):
                     f'Transaction {ready_txn_id} goes from {self.txns[ready_txn_id].status} to running'
                 )
 
-
-#                 print(self.txns[ready_txn_id].current_instruction)
-#             print(self.txns[ready_txn_id].current_instruction)
             self.txns[ready_txn_id].status = "running"
             self.read_instruction(self.txns[ready_txn_id].current_instruction)
             print()
