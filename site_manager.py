@@ -298,7 +298,6 @@ class Site_Manager(object):
         Parameters:
             txn (Transaction Object): Transaction to abort  
         """
-        #         print(self.item_txns_waiting_map)
 
         # get rid of transaction in the item_waiting map
         for _, transaction_waiting in self.item_txns_waiting_map.items():
@@ -310,7 +309,6 @@ class Site_Manager(object):
 
         # delete txn_id from the items_txns_waiting map
         for item_id, transaction_waiting in self.item_txns_waiting_map.items():
-            #             print(item_id, len(transaction_waiting))
 
             to_delete = False
             for transaction_after, transaction_before in transaction_waiting.items(
@@ -327,7 +325,7 @@ class Site_Manager(object):
                 self.item_txns_waiting_map[item_id] = OrderedDict()
 
         self.txns_ended_list.append((txn.id, "killed"))
-        #         print(self.item_txns_waiting_map)
+
         if self.debug: print("Waiting:", self.txns_waiting_list)
 
     def release_locks(self, txn):
