@@ -316,9 +316,6 @@ class Transaction_Manager(object):
                     f'Transaction {ready_txn_id} goes from {self.txns[ready_txn_id].status} to running'
                 )
 
-
-#                 print(self.txns[ready_txn_id].current_instruction)
-#             print(self.txns[ready_txn_id].current_instruction)
             self.txns[ready_txn_id].status = "running"
             self.read_instruction(self.txns[ready_txn_id].current_instruction)
             print()
