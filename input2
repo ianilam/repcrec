@@ -1,0 +1,12 @@
+fail(2)
+begin(T1)            
+begin(T2) 
+R(T2,x1)
+recover(2)
+begin(T3)
+W(T3,x1,2)
+R(T1,x1)
+end(T2)
+end(T3)
+end(T1)
+dump()
