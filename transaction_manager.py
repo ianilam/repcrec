@@ -39,7 +39,8 @@ class Transaction_Manager(object):
         """
 
         self.tick += 1
-        print(f'tick {self.tick}: {instr}')
+        if self.debug:
+            print(f'tick {self.tick}: {instr}')
 
         instr = instr.replace(" ", "")
         instruction = instr[:-1].split("(")
@@ -110,7 +111,7 @@ class Transaction_Manager(object):
         txn.current_instruction = instr
         self.txns[txn_id] = txn
 
-        # acquire snapshot from site manager
+        # acquire snapshot site manager
         txn.snapshot = self.site_manager.acquire_snapshot(txn_id)
         if txn.snapshot != None:
             if self.debug:
@@ -119,9 +120,10 @@ class Transaction_Manager(object):
                 )
         else:
             txn.status = "blocked"
-            print(
-                f'Transaction {txn_id} unable to acquire snapshot. Need to wait.'
-            )
+            if self.debug:
+                print(
+                    f'Transaction {txn_id} unable to acquire snapshot. Need to wait.'
+                )
 
     def read(self, instr, txn_id, item_id):
         """ If transaction is ReadWrite, asks Site_Manager to acquire shared lock for item, if successful then read item from database
@@ -154,7 +156,6 @@ class Transaction_Manager(object):
                     read_item_value = txn.uncommit_values[item_id]
                 else:
                     read_item_value = share_lock.item_locked.value
-
                 print(f'x{item_id}: {read_item_value}')
 
                 # add this operation to the transaction's cache
@@ -220,7 +221,8 @@ class Transaction_Manager(object):
         """
 
         self.site_manager.fail(site_id, self.tick)
-        if self.debug: print(f'Site {site_id} failed at timestamp {self.tick}')
+        if self.debug:
+            print(f'Site {site_id} failed at timestamp {self.tick}')
 
     def recover(self, site_id):
         """ Tells the Site_manager to recover a site
@@ -241,7 +243,8 @@ class Transaction_Manager(object):
         """ Tells the Site_manager to dump all the variables and their values
         """
 
-        if self.debug: print("dumping stuff", "at timestamp", self.tick)
+        if self.debug:
+            print("dumping stuff", "at timestamp", self.tick)
         self.site_manager.dump()
 
     def end(self, instr, txn_id):
@@ -262,12 +265,15 @@ class Transaction_Manager(object):
         txn.current_instruction = instr
 
         # Check if transaction has already been committed or aborted
-        if txn.status == "committed" or txn.status == "aborted":
-            print(f'Transaction {txn_id} has already been {txn.status}')
+        if txn.status == "committed":
+            print(f'T{txn_id} commits')
+        if txn.status == "aborted":
+            print(f'T{txn_id} aborts')
 
         # Check if transaction is blocked or not
         elif txn.status == "blocked":
-            print(f'Cannot end because Transaction {txn_id} is being blocked.')
+            if self.debug:
+                print(f'Cannot end because Transaction {txn_id} is being blocked.')
 
         elif txn.transaction_type == "read_write":
             if self.debug:
@@ -276,19 +282,19 @@ class Transaction_Manager(object):
 
             # Ask site manager to check if transaction can commit
             if self.site_manager.check_commit(txn):
-                print(f'Transaction {txn_id} commits.')
+                print(f'T{txn_id} commits')
 
                 # ask site manager to commit
                 self.site_manager.commit(txn)
                 txn.status = "committed"
             else:
-                print(f'Transaction {txn_id} aborts.')
+                print(f'T{txn_id} aborts')
 
                 # ask site manager to abort
                 self.site_manager.abort(txn)
                 txn.status = "aborted"
         else:
-            print(f'Transaction {txn_id} commits')
+            print(f'T{txn_id} commits')
 
             # ask site manager to commit a Read Only transaction
             self.site_manager.commitRO(txn)
@@ -308,15 +314,15 @@ class Transaction_Manager(object):
 
             # pop the transaction out
             ready_txn_id = self.site_manager.txns_ready_list.pop(0)
-            print(f'Resume Transaction {ready_txn_id}')
             if self.debug:
+                print(f'Resume Transaction {ready_txn_id}')
                 print(
                     f'Transaction {ready_txn_id} goes from {self.txns[ready_txn_id].status} to running'
                 )
 
             self.txns[ready_txn_id].status = "running"
             self.read_instruction(self.txns[ready_txn_id].current_instruction)
-            print()
+            # print()
 
     def find_cycle(self):
         # Tell site_manager to detect cycle, if cycle found, kill the youngest cycle
@@ -325,7 +331,8 @@ class Transaction_Manager(object):
         if len(cycles) > 0:
 
             for cycle in cycles:
-                print(f'Cycle detected in Transactions {cycle}')
+                if self.debug:
+                    print(f'Cycle detected in Transactions {cycle}')
                 self.kill_youngest(cycle)
 
     def kill_youngest(self, cycle):
@@ -338,10 +345,11 @@ class Transaction_Manager(object):
         cycle.sort(key=lambda txn_id: self.txns[txn_id].timestamp,
                    reverse=True)
         youngest_txn = self.txns[cycle[0]]
-        print(f'Killing the youngest Transaction {cycle[0]}')
+        if self.debug:
+            print(f'Killing the youngest Transaction {cycle[0]}')
         youngest_txn.status = "aborted"
         self.site_manager.kill(youngest_txn)
-        print()
+        # print()
 
     def query_state(self):
         # prints info of all the transactions in Transaction Manager

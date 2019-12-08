@@ -46,9 +46,11 @@ class Site(object):
     def dump_site(self):
         # dump info of this site
         print(f'Site {self.site_id} - ', end="")
+        s = ""
         for k, v in self.data_table.items():
-            print(f'x{k}:{v.value}, ', end="")
-        print()
+            # print(f'x{k}: {v.value}, ', end="")
+            s += f'x{k}: {v.value}, '
+        print(s[:-2])
 
     def fail(self, ts):
         """Fails a site, wipes out the lock table, and wipes out readable_variables

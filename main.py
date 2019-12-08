@@ -15,20 +15,13 @@ tm = Transaction_Manager()
 filename = sys.argv[1]
 
 with open(filename, "r") as f:
-    print(
-        "---------------------- beginning of program ---------------------------"
-    )
     for line in f:
         tm.find_cycle()
         tm.run_ready_transactions()
         line = line.strip()
         tm.read_instruction(line)
-        print()
 
     tm.find_cycle()
     tm.run_ready_transactions()
 
     #     tm.query_state()
-    print(
-        "----------------------- end of program ---------------------------------"
-    )

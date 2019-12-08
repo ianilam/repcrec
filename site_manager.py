@@ -113,7 +113,8 @@ class Site_Manager(object):
                         location.lock_table[item_id] = Lock(
                             "SL", txn_id, location.site_id,
                             location.data_table[item_id])
-                        if self.debug: print('Received shared lock')
+                        if self.debug:
+                            print('Received shared lock')
                         return location.lock_table[item_id]
 
                     elif location.lock_table[item_id].lock_type == "SL" and len(
@@ -139,22 +140,25 @@ class Site_Manager(object):
                     else:
                         # item locked by exclusive lock from other transactions
                         txn_blocking = location.lock_table[item_id].txn_holding
-                        print(
-                            f'Fail to acquire shared lock because Transaction {txn_blocking} currently locked x{item_id}'
-                        )
+                        if self.debug:
+                            print(
+                                f'Fail to acquire shared lock because Transaction {txn_blocking} currently locked x{item_id}'
+                            )
                         transactions_ahead = list(
                             self.item_txns_waiting_map[item_id].keys())
                         self.item_txns_waiting_map[item_id][txn_id] = set(
                             transactions_ahead + txn_blocking)
-                        print(
-                            f'Need to wait for Transactions {set(transactions_ahead + txn_blocking)}'
-                        )
+                        if self.debug:
+                            print(
+                                f'Need to wait for Transactions {set(transactions_ahead + txn_blocking)}'
+                            )
                         return None
 
         # All sites not available
-        print(
-            f'Not able to acquire shared lock for x{item_id} either due to site failure or the data item not updated.'
-        )
+        if self.debug:
+            print(
+                f'Not able to acquire shared lock for x{item_id} either due to site failure or the data item not updated.'
+            )
         self.txns_waiting_list.append(txn_id)
         return None
 
@@ -193,7 +197,8 @@ class Site_Manager(object):
                     location.lock_table[item_id] = Lock(
                         "XL", txn_id, location.site_id,
                         location.data_table[item_id])
-                    if self.debug: print(f'Received exclusive lock')
+                    if self.debug:
+                        print(f'Received exclusive lock')
                     acquired_exclusive_locks.append(
                         location.lock_table[item_id])
 
@@ -203,7 +208,8 @@ class Site_Manager(object):
                         0] == txn_id and len(
                             location.lock_table[item_id].txn_holding) == 1:
                     # if item is locked with SL, and no other transaction waiting for item, and this current transaction is the one holding the SL, and no other transaction is reading the item
-                    if self.debug: print(f'Promote lock from SL to XL')
+                    if self.debug:
+                        print(f'Promote lock from SL to XL')
                     location.lock_table[item_id].lock_type = "XL"
                     acquired_exclusive_locks.append(
                         location.lock_table[item_id])
@@ -220,16 +226,18 @@ class Site_Manager(object):
                 else:
                     # someone is reading or writing it
                     txn_blocking = location.lock_table[item_id].txn_holding
-                    print(
-                        f'Fail to acquire exclusive lock because Transactions {txn_blocking} currently locked x{item_id}'
-                    )
+                    if self.debug:
+                        print(
+                            f'Fail to acquire exclusive lock because Transactions {txn_blocking} currently locked x{item_id}'
+                        )
                     transactions_ahead = list(
                         self.item_txns_waiting_map[item_id].keys())
                     self.item_txns_waiting_map[item_id][txn_id] = set(
                         transactions_ahead + txn_blocking)
-                    print(
-                        f'Need to wait for Transactions {set(transactions_ahead + txn_blocking)}'
-                    )
+                    if self.debug:
+                        print(
+                            f'Need to wait for Transactions {set(transactions_ahead + txn_blocking)}'
+                        )
                     return []
 
         return acquired_exclusive_locks
@@ -249,9 +257,10 @@ class Site_Manager(object):
                 _, _, touched_sites = action[1]
                 for s in touched_sites:
                     if self.sites[s - 1].last_fail_timestamp > ts:
-                        print(
-                            f'Site {s} has failed after Transaction {txn.id} obtained lock'
-                        )
+                        if self.debug:
+                            print(
+                                f'Site {s} has failed after Transaction {txn.id} obtained lock'
+                            )
                         return False
 
             return True
@@ -326,7 +335,8 @@ class Site_Manager(object):
 
         self.txns_ended_list.append((txn.id, "killed"))
 
-        if self.debug: print("Waiting:", self.txns_waiting_list)
+        if self.debug:
+            print("Waiting:", self.txns_waiting_list)
 
     def release_locks(self, txn):
         """ Releases all locks from the transaction, updates the lock_table of where the lock is from
@@ -356,7 +366,7 @@ class Site_Manager(object):
             for _, transaction_before in self.item_txns_waiting_map[
                     l.item_locked.id].items():
                 if txn.id in transaction_before:
-                    #                     print(f'Remove Transaction {txn.id} from the waiting list of x{l.item_locked.id}')
+                    # print(f'Remove Transaction {txn.id} from the waiting list of x{l.item_locked.id}')
                     transaction_before.remove(txn.id)
 
             # check if any new transaction can proceed
@@ -382,7 +392,8 @@ class Site_Manager(object):
                 break
 
         txn.locks_holding = []
-        if self.debug: print(f'All locks released for Transaction {txn.id}')
+        if self.debug:
+            print(f'All locks released for Transaction {txn.id}')
 
     def write(self, item_id, new_val, destinations):
         """ Writes the new value to the database
@@ -399,10 +410,10 @@ class Site_Manager(object):
 
             # this is for updating the readable_variables
             destination.readable_variables.add(item_id)
-
-        print(
-            f'Commits new value {new_val} to x{item_id} in Sites {destinations}'
-        )
+        if self.debug:
+            print(
+                f'Commits new value {new_val} to x{item_id} in Sites {destinations}'
+            )
 
     def acquire_snapshot(self, txn_id):
         """ Acquires snapshot of database with each data item and its value
@@ -423,9 +434,10 @@ class Site_Manager(object):
                     break
 
             if snapshot[i] == None:
-                print(
-                    f'Transaction {txn_id} cannot acquire x{i} for the snapshot because it\'s not available in any site.'
-                )
+                if self.debug:
+                    print(
+                        f'Transaction {txn_id} cannot acquire x{i} for the snapshot because it\'s not available in any site.'
+                    )
                 self.txns_waiting_list.append(txn_id)
                 return None
 
