@@ -258,7 +258,6 @@ class Site_Manager(object):
 
         # just release all locks since the transaction will abort
         self.release_locks(txn)
-
         self.txns_ended_list.append((txn.id, "aborted"))
 
     def kill(self, txn):
