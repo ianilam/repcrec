@@ -12,7 +12,7 @@ Python 3.6
 
 This project implements a distributed database system of 10 sites and 20 variables. It takes in an input text file and runs the operations in the file line by line. For read operations, it will output onto the screen the data value of the desired item. For write operations, it will output onto screen the new value written. For end operations, it will output rather a transaction commits or aborts. If a transaction cannot acquire a lock or a snapshot of database or is killed due to deadlock, the program will output that as well. The program assumes that no new instruction for a transaction is given while the transaction is waiting for a lock on an item or site recovery.
 
-<b> Detailed documentation and diagram of the program is provided in RepCrec_Documentation.pdf <b>
+Detailed documentation and diagram of the program is provided in RepCrec_Documentation.pdf
 
 ## TO RUN THE PROGRAM:
 
